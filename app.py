@@ -1,6 +1,8 @@
 import random
 import streamlit as st
 
+# FIX: Refactored core game logic into logic_utils.py using agent mode,
+# then imported it here so the same functions can be unit-tested.
 from logic_utils import (
     get_range_for_difficulty,
     parse_guess,
@@ -37,6 +39,8 @@ if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
 if "attempts" not in st.session_state:
+    # FIX: Agent mode caught that attempts started at 1, silently burning one
+    # guess. Reset to 0 so the count matches the advertised attempt limit.
     st.session_state.attempts = 0
 
 if "score" not in st.session_state:
@@ -55,6 +59,8 @@ st.info(
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
+# FIX: Removed the "Developer Debug Info" expander here that leaked the secret
+# number to players. Flagged together while reviewing the UI in agent mode.
 
 raw_guess = st.text_input(
     "Enter your guess:",
@@ -70,6 +76,9 @@ with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 if new_game:
+    # FIX: New Game only reset attempts before (and used a hardcoded 1-100
+    # range). Agent mode helped trace which session_state keys to clear so a
+    # new round starts from a true clean slate using the difficulty's range.
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
     st.session_state.status = "playing"
@@ -96,6 +105,8 @@ if submit:
     else:
         st.session_state.history.append(guess_int)
 
+        # FIX: Pass the real integer secret directly. Old code stringified it
+        # on alternating attempts, breaking the comparison. Spotted in agent mode.
         outcome, message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:

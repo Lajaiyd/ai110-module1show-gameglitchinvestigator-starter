@@ -41,6 +41,8 @@ def check_guess(guess, secret):
     if guess == secret:
         return "Win", "🎉 Correct!"
 
+    # FIX: Hints were reversed (too-high told players to go HIGHER). Agent mode
+    # flagged the swap; also dropped an unreachable str-comparison fallback.
     if guess > secret:
         return "Too High", "📉 Go LOWER!"
     return "Too Low", "📈 Go HIGHER!"
