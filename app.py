@@ -4,9 +4,9 @@ import streamlit as st
 # FIX: Refactored core game logic into logic_utils.py using agent mode,
 # then imported it here so the same functions can be unit-tested.
 from logic_utils import (
+    check_guess,
     get_range_for_difficulty,
     parse_guess,
-    check_guess,
     update_score,
 )
 
@@ -55,9 +55,11 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
+
+
 
 # FIX: Removed the "Developer Debug Info" expander here that leaked the secret
 # number to players. Flagged together while reviewing the UI in agent mode.
@@ -74,6 +76,29 @@ with col2:
     new_game = st.button("New Game 🔁")
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
+
+def render_game_summary():
+    """Display the player's guess history and current session summary."""
+    st.sidebar.subheader("Guess History")
+
+    if st.session_state.history:
+        for guess in st.session_state.history:
+            st.sidebar.write(f"• {guess}")
+    else:
+        st.sidebar.caption("No guesses yet.")
+
+    st.subheader("Session Summary")
+    st.table(
+        {
+            "Metric": ["Attempts Used", "Attempts Left", "Score", "Status"],
+            "Value": [
+                st.session_state.attempts,
+                attempt_limit - st.session_state.attempts,
+                st.session_state.score,
+                st.session_state.status,
+            ],
+        }
+    )
 
 if new_game:
     # FIX: New Game only reset attempts before (and used a hardcoded 1-100
@@ -92,6 +117,7 @@ if st.session_state.status != "playing":
         st.success("You already won. Start a new game to play again.")
     else:
         st.error("Game over. Start a new game to try again.")
+    render_game_summary()
     st.stop()
 
 if submit:
@@ -133,6 +159,8 @@ if submit:
                     f"The secret was {st.session_state.secret}. "
                     f"Score: {st.session_state.score}"
                 )
+
+
 
 st.divider()
 st.caption("Built by an AI that claims this code is production-ready.")
